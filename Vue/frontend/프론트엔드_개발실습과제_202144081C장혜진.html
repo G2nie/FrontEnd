@@ -75,10 +75,11 @@
                     </td>
                     <td contenteditable="true" @input="updateValue(row, 'name')" :textContent="row.name" class="left-align"></td>
                     <td contenteditable="true" @input="updateValue(row, 'credits')" :textContent="row.credits"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'attendance')" :textContent="row.attendance"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'assignments')" :textContent="row.assignments"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'midterm')" :textContent="row.midterm"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'final')" :textContent="row.final"></td>
+                    <!-- 데이터 변수를 바인딩 -->
+                    <td contenteditable="true" @input="updateValue(row, 'attendance')" :textContent="newAttendance"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'assignments')" :textContent="newAssignments"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'midterm')" :textContent="newMidterm"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'final')" :textContent="newFinal"></td>
                     <!-- 총점, 평균, 성적 계산 결과 표시 -->
                     <td>{{ row.total }}</td>
                     <td>{{ row.average }}</td>
@@ -127,8 +128,8 @@
                     assignments: 0,
                     midterm: 0,
                     final: 0,
-                    total: 0,
-                    average: 0,
+                    total: null,
+                    average: null,
                     grade: ''
                 });
             },
