@@ -5,60 +5,46 @@
     <title>C202144081장혜진</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        /* 웹페이지 제목을 가운데 정렬하고 상단 여백을 조정합니다. */
         h1 {
             text-align: center;
             margin-top: 20px;
         }
-
-        /* 테이블 스타일을 설정합니다. */
         table {
             border-collapse: collapse;
             width: 100%;
         }
-
-        /* 테이블의 th와 td 스타일을 설정합니다. */
         th, td {
             border: 1px solid #000;
             padding: 8px;
             text-align: center;
         }
-
-        /* 과목명 셀의 텍스트를 왼쪽 정렬합니다. */
         td.left-align {
             text-align: left;
         }
-
-        /* 성적이 'F'인 경우 텍스트를 빨간색으로 표시합니다. */
         .red-text {
             color: red;
         }
     </style>
 </head>
-
 <body>
-<!-- 웹페이지 제목 -->
 <h1>Front-end 과제</h1>
 <div id="app">
     <ul>
-        <!-- 테이블 선택을 위한 체크박스를 생성합니다. -->
+        <!-- 학년 테이블 선택 체크박스 -->
         <div v-for="(table, index) in tables" :key="index">
             <input type="checkbox" :id="`checkbox-${index}`" v-model="selectedTables" :value="index">
             <label :for="`checkbox-${index}`">{{ table.name }}</label>
         </div>
-        <!-- 선택한 테이블들을 화면에 표시합니다. -->
+        <!-- 선택한 테이블 표시 -->
         <div v-for="(table, index) in selectedTables" :key="index">
-            <!-- 테이블 이름 표시 -->
             <h2>{{ tables[table].name }}</h2>
             <!-- 행 추가, 삭제, 저장 버튼 -->
             <button @click="addRow(table)">추가</button>
             <button @click="deleteRow(table)">삭제</button>
-            <button @click="calculate(tables[table])">저장</button>
-            <!-- 성적 데이터를 표시하는 테이블 -->
+            <button @click="calculate(table)">저장</button>
             <table>
                 <thead>
                 <tr>
-                    <!-- 테이블 헤더 열 정의 -->
                     <th>이수</th>
                     <th>필수</th>
                     <th>과목명</th>
@@ -75,7 +61,6 @@
                 <tbody>
                 <!-- 테이블 행을 반복하며 데이터 표시 -->
                 <tr v-for="(row, rowIndex) in tables[table].rows" :key="rowIndex">
-                    <!-- 각 열의 데이터를 수정 가능하게 표시 -->
                     <td>
                         <select v-model="row.subject">
                             <option value="교양">교양</option>
@@ -88,17 +73,16 @@
                             <option value="선택">선택</option>
                         </select>
                     </td>
-                    <!-- 과목명 셀은 왼쪽 정렬 적용 -->
-                    <td contenteditable="true" v-model="row.name" class="left-align"></td>
-                    <td contenteditable="true" v-model="row.credits"></td>
-                    <td contenteditable="true" v-model="row.attendance"></td>
-                    <td contenteditable="true" v-model="row.assignments"></td>
-                    <td contenteditable="true" v-model="row.midterm"></td>
-                    <td contenteditable="true" v-model="row.final"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'name')" :textContent="row.name" class="left-align"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'credits')" :textContent="row.credits"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'attendance')" :textContent="row.attendance"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'assignments')" :textContent="row.assignments"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'midterm')" :textContent="row.midterm"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'final')" :textContent="row.final"></td>
                     <!-- 총점, 평균, 성적 계산 결과 표시 -->
-                    <td>{{ calculateTotal(row) }}</td>
-                    <td>{{ calculateAverage(row) }}</td>
-                    <td :class="{ 'red-text': calculateGrade(row) === 'F' }">{{ calculateGrade(row) }}</td>
+                    <td>{{ row.total }}</td>
+                    <td>{{ row.average }}</td>
+                    <td :class="{ 'red-text': row.grade === 'F' }">{{ row.grade }}</td>
                 </tr>
                 <!-- 합계 행 -->
                 <tr id="total">
@@ -155,14 +139,16 @@
                 }
             },
             // 저장 버튼 로직
-            calculate(row) {
-                row.total = this.calculateTotal(row);
-                row.average = this.calculateAverage(row);
-                row.grade = this.calculateGrade(row);
-                if (row.credits === 1) {
-                    row.total = null
-                    row.average = null
-                    row.grade = 'P';
+            calculate(tableIndex) {
+                for (const row of this.tables[tableIndex].rows) {
+                    row.total = this.calculateTotal(row);
+                    row.average = this.calculateAverage(row);
+                    row.grade = this.calculateGrade(row);
+                    if (row.credits === 1) {
+                        row.total = null;
+                        row.average = null;
+                        row.grade = 'P';
+                    }
                 }
             },
             // 총점 계산
@@ -188,7 +174,12 @@
                 else if (average >= 50) return 'D';
                 else return 'F';
             },
-            // 학점 합계 계산
+            // 사용자 입력을 업데이트
+            updateValue(row, field) {
+                row[field] = event.target.textContent;
+            },
+            <!-- 합계 계산 로직 -->
+            // 학점 합계
             calculateTotalCredits(table) {
                 let totalCredits = 0;
                 for (const row of table.rows) {
@@ -196,7 +187,7 @@
                 }
                 return totalCredits;
             },
-            // 출석 점수 합계 계산
+            // 출석 점수 합계
             calculateTotalAttendance(table) {
                 let totalAttendance = 0;
                 for (const row of table.rows) {
@@ -204,7 +195,7 @@
                 }
                 return totalAttendance;
             },
-            // 과제 점수 합계 계산
+            // 과제 점수 합계
             calculateTotalAssignments(table) {
                 let totalAssignments = 0;
                 for (const row of table.rows) {
@@ -212,7 +203,7 @@
                 }
                 return totalAssignments;
             },
-            // 중간고사 점수 합계 계산
+            // 중간고사 점수 합계
             calculateTotalMidterm(table) {
                 let totalMidterm = 0;
                 for (const row of table.rows) {
@@ -220,7 +211,7 @@
                 }
                 return totalMidterm;
             },
-            // 기말고사 점수 합계 계산
+            // 기말고사 점수 합계
             calculateTotalFinal(table) {
                 let totalFinal = 0;
                 for (const row of table.rows) {
@@ -228,7 +219,7 @@
                 }
                 return totalFinal;
             },
-            // 합계 총점 계산
+            // 총점 합계
             calculateTotalScore(table) {
                 return (
                     this.calculateTotalAttendance(table) +
@@ -237,11 +228,11 @@
                     this.calculateTotalFinal(table)
                 );
             },
-            // 합계 평균 계산
+            // 평균 합계
             calculateTotalAverage(table) {
                 return this.calculateTotalScore(table) / (4 * table.rows.length);
             }
-        }
+        },
     });
     app.mount('#app');
 </script>
