@@ -9,20 +9,49 @@
             text-align: center;
             margin-top: 20px;
         }
+
         table {
             border-collapse: collapse;
             width: 100%;
         }
+
         th, td {
-            border: 1px solid #000;
+            border: 1px solid #ffffff;
             padding: 8px;
             text-align: center;
         }
+
+        tr:nth-child(even) {
+            background-color: #e9edf4;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #d0d8e8;
+        }
+
         td.left-align {
             text-align: left;
         }
+
+        th {
+            font-weight: bold;
+            color: white;
+            background-color: #5082bd;
+        }
+
         .red-text {
             color: red;
+        }
+
+        button {
+            background-color: #808080;
+            color: white;
+            padding: 5px 10px;
+            border: #5082bd solid;
+            cursor: pointer;
+            margin-right: 5px;
+            float: right;
+            font-size: 20px;
         }
     </style>
 </head>
@@ -39,9 +68,11 @@
         <div v-for="(table, index) in selectedTables" :key="index">
             <h2>{{ tables[table].name }}</h2>
             <!-- 행 추가, 삭제, 저장 버튼 -->
-            <button @click="addRow(table)">추가</button>
-            <button @click="deleteRow(table)">삭제</button>
             <button @click="calculate(table)">저장</button>
+            <button @click="deleteRow(table)">삭제</button>
+            <button @click="addRow(table)">추가</button>
+
+
             <table>
                 <thead>
                 <tr>
@@ -73,11 +104,14 @@
                             <option value="선택">선택</option>
                         </select>
                     </td>
-                    <td contenteditable="true" @input="updateValue(row, 'name')" :textContent="row.name" class="left-align"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'name')" :textContent="row.name"
+                        class="left-align"></td>
                     <td contenteditable="true" @input="updateValue(row, 'credits')" :textContent="row.credits"></td>
                     <!-- 데이터 변수를 바인딩 -->
-                    <td contenteditable="true" @input="updateValue(row, 'attendance')" :textContent="newAttendance"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'assignments')" :textContent="newAssignments"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'attendance')"
+                        :textContent="newAttendance"></td>
+                    <td contenteditable="true" @input="updateValue(row, 'assignments')"
+                        :textContent="newAssignments"></td>
                     <td contenteditable="true" @input="updateValue(row, 'midterm')" :textContent="newMidterm"></td>
                     <td contenteditable="true" @input="updateValue(row, 'final')" :textContent="newFinal"></td>
                     <!-- 총점, 평균, 성적 계산 결과 표시 -->
