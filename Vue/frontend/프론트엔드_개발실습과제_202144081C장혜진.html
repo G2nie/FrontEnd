@@ -145,11 +145,6 @@
                     row.total = this.calculateTotal(row);
                     row.average = this.calculateAverage(row);
                     row.grade = this.calculateGrade(row);
-                    if (row.credits === 1) {
-                        row.total = null;
-                        row.average = null;
-                        row.grade = 'P';
-                    }
                 }
             },
             // 총점 계산
