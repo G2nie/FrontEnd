@@ -64,6 +64,7 @@
             <input type="checkbox" :id="`checkbox-${index}`" v-model="selectedTables" :value="index">
             <label :for="`checkbox-${index}`">{{ table.name }}</label>
         </div>
+
         <!-- 선택한 테이블 표시 -->
         <div v-for="(table, index) in selectedTables" :key="index">
             <h2>{{ tables[table].name }}</h2>
@@ -72,7 +73,7 @@
             <button @click="deleteRow(table)">삭제</button>
             <button @click="addRow(table)">추가</button>
 
-
+            <!-- 테이블 -->
             <table>
                 <thead>
                 <tr>
@@ -104,42 +105,37 @@
                             <option value="선택">선택</option>
                         </select>
                     </td>
-                    <td contenteditable="true" @input="updateValue(row, 'name')" :textContent="row.name"
-                        class="left-align"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'credits')" :textContent="row.credits"></td>
-                    <!-- 데이터 변수를 바인딩 -->
-                    <td contenteditable="true" @input="updateValue(row, 'attendance')"
-                        :textContent="newAttendance"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'assignments')"
-                        :textContent="newAssignments"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'midterm')" :textContent="newMidterm"></td>
-                    <td contenteditable="true" @input="updateValue(row, 'final')" :textContent="newFinal"></td>
-                    <!-- 총점, 평균, 성적 계산 결과 표시 -->
+                    <!-- contenteditable = 사용자가 값 변경 -->
+                    <td contenteditable="true" @input="updateValue(row, 'name', $event)">{{ row.name }}</td>
+                    <td contenteditable="true" @input="updateValue(row, 'credit', $event)">{{ row.credit }}</td>
+                    <td contenteditable="true" @input="updateValue(row, 'attendance', $event)">{{ row.attendance }}</td>
+                    <td contenteditable="true" @input="updateValue(row, 'assignment', $event)">{{ row.assignments }}</td>
+                    <td contenteditable="true" @input="updateValue(row, 'midterm', $event)">{{ row.midterm }}</td>
+                    <td contenteditable="true" @input="updateValue(row, 'final', $event)">{{ row.final }}</td>
                     <td>{{ row.total }}</td>
                     <td>{{ row.average }}</td>
-                    <td :class="{ 'red-text': row.grade === 'F' }">{{ row.grade }}</td>
+                    <td>{{ row.grade }}</td>
                 </tr>
                 <!-- 합계 행 -->
                 <tr id="total">
                     <td colspan="3">합계</td>
-                    <td>{{ calculateTotalCredits(tables[table]) }}</td>
-                    <td>{{ calculateTotalAttendance(tables[table]) }}</td>
-                    <td>{{ calculateTotalAssignments(tables[table]) }}</td>
-                    <td>{{ calculateTotalMidterm(tables[table]) }}</td>
-                    <td>{{ calculateTotalFinal(tables[table]) }}</td>
-                    <td>{{ calculateTotalScore(tables[table]) }}</td>
-                    <td>{{ calculateTotalAverage(tables[table]) }}</td>
-                    <td>{{ calculateGrade(tables[table]) }}</td>
+                    <td>{{ tables[table].total_credit }}</td>
+                    <td>{{ tables[table].total_attendance }}</td>
+                    <td>{{ tables[table].total_assignment }}</td>
+                    <td>{{ tables[table].total_midterm }}</td>
+                    <td>{{ tables[table].total_final }}</td>
+                    <td>{{ tables[table].total_total }}</td>
+                    <td>{{ tables[table].total_average }}</td>
+                    <td></td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </ul>
 </div>
-
 <script>
-    // Vue 애플리케이션 생성
     const app = Vue.createApp({
+        // 각 학년 테이블
         data() {
             return {
                 tables: [
@@ -151,117 +147,97 @@
             };
         },
         methods: {
-            // 추가 버튼
+            updateValue(row, field, event) {
+                // 숫자 형태의 데이터는 parseFloat을 사용하여 변환
+                if (['credit', 'attendance', 'assignments', 'midterm', 'final'].includes(field)) {
+                    row[field] = parseFloat(event.target.textContent) || 0;
+                } else {
+                    // 과목명과 같은 문자열 데이터는 직접 할당
+                    row[field] = event.target.textContent;
+                }
+                // 데이터 변경 후 총점, 평균, 성적을 재계산
+                this.calculate(this.tables.indexOf(row.table));
+            },
+
+            // 행 추가
             addRow(tableIndex) {
                 this.tables[tableIndex].rows.push({
-                    subject: '',
-                    required: '',
+                    subject: '교양',
+                    required: '필수',
                     name: '',
-                    credits: 0,
+                    credit: 0,
                     attendance: 0,
                     assignments: 0,
                     midterm: 0,
                     final: 0,
-                    total: null,
-                    average: null,
+                    total: 0,
+                    average: 0,
                     grade: ''
                 });
             },
-            // 삭제 버튼 로직
+            // 행 삭제
             deleteRow(tableIndex) {
                 if (this.tables[tableIndex].rows.length > 0) {
                     this.tables[tableIndex].rows.pop();
                 }
             },
-            // 저장 버튼 로직
+            // 저장(=계산)
             calculate(tableIndex) {
-                for (const row of this.tables[tableIndex].rows) {
-                    row.total = this.calculateTotal(row);
-                    row.average = this.calculateAverage(row);
-                    row.grade = this.calculateGrade(row);
-                }
-            },
-            // 총점 계산
-            calculateTotal(row) {
-                return (
-                    parseFloat(row.attendance) +
-                    parseFloat(row.assignments) +
-                    parseFloat(row.midterm) +
-                    parseFloat(row.final)
-                );
-            },
-            // 평균 계산
-            calculateAverage(row) {
-                return row.total / 4;
-            },
-            // 성적 계산
-            calculateGrade(row) {
-                const average = row.average;
-                if (average >= 90) return 'A+';
-                else if (average >= 80) return 'A';
-                else if (average >= 70) return 'B';
-                else if (average >= 60) return 'C';
-                else if (average >= 50) return 'D';
-                else return 'F';
-            },
-            // 사용자 입력을 업데이트
-            updateValue(row, field) {
-                row[field] = event.target.textContent;
-            },
-            <!-- 합계 계산 로직 -->
-            // 학점 합계
-            calculateTotalCredits(table) {
-                let totalCredits = 0;
+                const table = this.tables[tableIndex];
+                // 합계를 위한 변수 초기화
+                table.total_credit = 0;
+                table.total_attendance = 0;
+                table.total_assignment = 0;
+                table.total_midterm = 0;
+                table.total_final = 0;
+                table.total_total = 0;
+                table.total_average = 0;
+
                 for (const row of table.rows) {
-                    totalCredits += parseFloat(row.credits) || 0;
+                    // 각 점수를 파싱하고 유효하지 않은 값(예: 빈 문자열)이 있을 경우 0으로 처리
+                    const attendance = parseFloat(row.attendance) || 0;
+                    const assignment = parseFloat(row.assignment) || 0;
+                    const midterm = parseFloat(row.midterm) || 0;
+                    const final = parseFloat(row.final) || 0;
+
+                    // 합계를 table 객체에 저장
+                    table.total_credit += parseFloat(row.credit) || 0;
+                    table.total_attendance += parseFloat(row.attendance) || 0;
+                    table.total_assignment += parseFloat(row.assignment) || 0;
+                    table.total_midterm += parseFloat(row.midterm) || 0;
+                    table.total_final += parseFloat(row.final) || 0;
+                    table.total_total += parseFloat(row.total) || 0;
+                    table.total_average += parseFloat(row.average) || 0;
+
+                    // 총점 계산
+                    row.total = attendance + assignment + midterm + final;
+                    // 평균 계산
+                    row.average = row.total / 4;
+                    // 성적 계산
+                    if (row.total >= 95) {
+                        row.grade = 'A+';
+                    } else if (row.total >= 90) {
+                        row.grade = 'A0';
+                    } else if (row.total >= 85) {
+                        row.grade = 'B+';
+                    } else if (row.total >= 80) {
+                        row.grade = 'B0';
+                    } else if (row.total >= 75) {
+                        row.grade = 'C+';
+                    } else if (row.total >= 70) {
+                        row.grade = 'C0';
+                    } else if (row.total >= 65) {
+                        row.grade = 'D+';
+                    } else if (row.total >= 60) {
+                        row.grade = 'D0';
+                    } else if (row.total = 0) {
+                        row.grade = 'F';
+                    } else {
+                        row.grade = 'F';
+                    }
+                    // return row.grade;
                 }
-                return totalCredits;
             },
-            // 출석 점수 합계
-            calculateTotalAttendance(table) {
-                let totalAttendance = 0;
-                for (const row of table.rows) {
-                    totalAttendance += parseFloat(row.attendance) || 0;
-                }
-                return totalAttendance;
-            },
-            // 과제 점수 합계
-            calculateTotalAssignments(table) {
-                let totalAssignments = 0;
-                for (const row of table.rows) {
-                    totalAssignments += parseFloat(row.assignments) || 0;
-                }
-                return totalAssignments;
-            },
-            // 중간고사 점수 합계
-            calculateTotalMidterm(table) {
-                let totalMidterm = 0;
-                for (const row of table.rows) {
-                    totalMidterm += parseFloat(row.midterm) || 0;
-                }
-                return totalMidterm;
-            },
-            // 기말고사 점수 합계
-            calculateTotalFinal(table) {
-                let totalFinal = 0;
-                for (const row of table.rows) {
-                    totalFinal += parseFloat(row.final) || 0;
-                }
-                return totalFinal;
-            },
-            // 총점 합계
-            calculateTotalScore(table) {
-                return (
-                    this.calculateTotalAttendance(table) +
-                    this.calculateTotalAssignments(table) +
-                    this.calculateTotalMidterm(table) +
-                    this.calculateTotalFinal(table)
-                );
-            },
-            // 평균 합계
-            calculateTotalAverage(table) {
-                return this.calculateTotalScore(table) / (4 * table.rows.length);
-            }
         },
     });
     app.mount('#app');
