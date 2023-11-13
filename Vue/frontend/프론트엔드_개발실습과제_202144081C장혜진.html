@@ -92,7 +92,8 @@
                 </thead>
                 <tbody>
                 <!-- 테이블 행을 반복하며 데이터 표시 -->
-                <tr v-for="(row, rowIndex) in tables[table].rows" :key="rowIndex">
+                <tr v-for="(row, rowIndex) in tables[table].rows" :key="rowIndex"
+                    @click="setClickedRow(table, rowIndex)">
                     <td>
                         <select v-model="row.subject">
                             <option value="교양">교양</option>
@@ -143,7 +144,8 @@
                     {name: '2학년', rows: []},
                     {name: '3학년', rows: []}
                 ],
-                selectedTables: [] // 체크된 테이블을 저장할 배열
+                selectedTables: [], // 체크된 테이블을 저장할 배열
+                clickedRow: null //현재 마우스ㅗ 클릭한 행
             };
         },
         methods: {
@@ -176,9 +178,14 @@
                 });
             },
             // 행 삭제
+            setClickedRow(tableIndex, rowIndex) {
+              this.clickedRow = {tableIndex, rowIndex};
+            },
+
             deleteRow(tableIndex) {
-                if (this.tables[tableIndex].rows.length > 0) {
-                    this.tables[tableIndex].rows.pop();
+                if (this.clickedRow && this.clickedRow.tableIndex === tableIndex) {
+                    this.tables[tableIndex].rows.splice(this.clickedRow.rowIndex, 1);
+                    this.clickedRow = null;
                 }
             },
             // 저장(=계산)
