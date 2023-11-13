@@ -207,13 +207,10 @@
                     table.total_midterm += parseFloat(row.midterm) || 0;
                     table.total_final += parseFloat(row.final) || 0;
                     table.total_total += parseFloat(row.total) || 0;
-                    table.total_average += parseFloat(row.average) || 0;
 
-                    // 총점 계산
+                    // 과목별 총점 계산
                     row.total = attendance + assignment + midterm + final;
-                    // 평균 계산
-                    row.average = row.total / 4;
-                    // 성적 계산
+                    // 과목별 성적 계산
                     if (row.total >= 95) {
                         row.grade = 'A+';
                     } else if (row.total >= 90) {
@@ -235,7 +232,8 @@
                     } else {
                         row.grade = 'F';
                     }
-                    // return row.grade;
+                    // 합계 행 평균 계산 전체 총점 / 과목수
+                    table.total_average = table.rows.length > 0 ? table.total_total / table.rows.length : 0;
                 }
             },
         },

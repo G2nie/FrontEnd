@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> 학점 계산기 </title>
+    <h1>학점 계산기</h1>
+    <meta charset="UTF-8">
+    <style>
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ffffff;
+            padding: 8px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #e9edf4;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #d0d8e8;
+        }
+
+        td.left-align {
+            text-align: left;
+        }
+
+        th {
+            font-weight: bold;
+            color: white;
+            background-color: #5082bd;
+        }
+
+        .red-text {
+            color: red;
+        }
+
+        button {
+            background-color: #808080;
+            color: white;
+            padding: 5px 10px;
+            border: #5082bd solid;
+            cursor: pointer;
+            margin-right: 5px;
+            float: right;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <table>
+            <thead>
+                <tr>
+                    <th>과목</th>
+                    <th>점수</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(subject, index) in subjects" :key="index">
+                    <td>{{ subject.name }}</td>
+                    <td>{{ subject.score }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <button @click="calculateGPA">계산</button>
+        <p v-if="showGPA" class="red-text">평균 점수: {{ averageScore }} (학점: {{ gpa }})</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                subjects: [],
+                averageScore: 0,
+                gpa: '',
+                showGPA: false
+            },
+            methods: {
+                calculateGPA: function() {
+                    let totalScore = 0;
+                    this.subjects.forEach(subject => {
+                        totalScore += parseFloat(subject.score);
+                    });
+                    this.averageScore = (totalScore / this.subjects.length).toFixed(2);
+
+                    // GPA 계산 로직을 여기에 추가
+                    // 예: GPA = 4.0 (A+), 3.0 (B), 등등
+
+                    this.showGPA = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
