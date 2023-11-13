@@ -115,7 +115,16 @@
                     <td contenteditable="true" @input="updateValue(row, 'final', $event)">{{ row.final > 0 ? row.final : ''}}</td>
                     <td>{{ row.total > 0 ? row.total : ''}}</td>
                     <td>{{ row.average > 0 ? row.average : ''}}</td>
-                    <td>{{ row.grade }}</td>
+                    //<td>{{ row.grade }}</td>
+                    <td>
+                        <div v-if="row.credit === 1">
+                            <select v-model="row.grade">
+                                <option value="P">P</option>
+                                <option value="NP">NP</option>
+                            </select>
+                        </div>
+                        <div v-else>{{ row.grade }}</div>
+                    </td>
                 </tr>
                 <!-- 합계 행 -->
                 <tr id="total">
@@ -149,6 +158,7 @@
             };
         },
         methods: {
+            // 테이블 업데이트
             updateValue(row, field, event) {
                 // 숫자 형태의 데이터는 parseFloat을 사용하여 변환
                 if (['credit', 'attendance', 'assignments', 'midterm', 'final'].includes(field)) {
@@ -178,17 +188,18 @@
                     grade: ''
                 });
             },
+
             // 행 삭제
             setClickedRow(tableIndex, rowIndex) {
               this.clickedRow = {tableIndex, rowIndex};
             },
-
             deleteRow(tableIndex) {
                 if (this.clickedRow && this.clickedRow.tableIndex === tableIndex) {
                     this.tables[tableIndex].rows.splice(this.clickedRow.rowIndex, 1);
                     this.clickedRow = null;
                 }
             },
+
             // 저장(=계산)
             calculate(tableIndex) {
                 const table = this.tables[tableIndex];
@@ -218,29 +229,38 @@
 
                     // 과목별 총점 계산
                     row.total = attendance + assignment + midterm + final;
+
                     // 과목별 성적 계산
-                    if (row.total >= 95) {
-                        row.grade = 'A+';
-                    } else if (row.total >= 90) {
-                        row.grade = 'A0';
-                    } else if (row.total >= 85) {
-                        row.grade = 'B+';
-                    } else if (row.total >= 80) {
-                        row.grade = 'B0';
-                    } else if (row.total >= 75) {
-                        row.grade = 'C+';
-                    } else if (row.total >= 70) {
-                        row.grade = 'C0';
-                    } else if (row.total >= 65) {
-                        row.grade = 'D+';
-                    } else if (row.total >= 60) {
-                        row.grade = 'D0';
-                    } else if (row.total = 0) {
-                        row.grade = 'F';
-                    } else {
-                        row.grade = 'F';
+                    if (row.credit !== 1) {
+                        if (row.total >= 95) {
+                            row.grade = 'A+';
+                        } else if (row.total >= 90) {
+                            row.grade = 'A0';
+                        } else if (row.total >= 85) {
+                            row.grade = 'B+';
+                        } else if (row.total >= 80) {
+                            row.grade = 'B0';
+                        } else if (row.total >= 75) {
+                            row.grade = 'C+';
+                        } else if (row.total >= 70) {
+                            row.grade = 'C0';
+                        } else if (row.total >= 65) {
+                            row.grade = 'D+';
+                        } else if (row.total >= 60) {
+                            row.grade = 'D0';
+                        } else if (row.total = 0) {
+                            row.grade = 'F';
+                        } else {
+                            row.grade = 'F';
+                        }
                     }
-                    // 합계 행 평균 계산 전체 총점 / 과목수
+
+                    // 합계행 학점 - 학점이 1이면서 성적이 'NP'인 경우엔 학점 합계에 1을 뺌
+                    if (row.credit === 1 && row.grade === 'NP') {
+                        table.total_credit -= 1;
+                    }
+
+                    // 합계행 평균
                     table.total_average = table.rows.length > 0 ? table.total_total / table.rows.length : 0;
                 }
             },
