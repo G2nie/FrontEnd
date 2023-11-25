@@ -115,16 +115,7 @@
                     <td contenteditable="true" @input="updateValue(row, 'final', $event)">{{ row.final > 0 ? row.final : ''}}</td>
                     <td>{{ row.total > 0 ? row.total : ''}}</td>
                     <td>{{ row.average > 0 ? row.average : ''}}</td>
-                    //<td>{{ row.grade }}</td>
-                    <td>
-                        <div v-if="row.credit === 1">
-                            <select v-model="row.grade">
-                                <option value="P">P</option>
-                                <option value="NP">NP</option>
-                            </select>
-                        </div>
-                        <div v-else>{{ row.grade }}</div>
-                    </td>
+                    <td>{{row.grade}}</td>
                 </tr>
                 <!-- 합계 행 -->
                 <tr id="total">
@@ -154,7 +145,7 @@
                     {name: '3학년', rows: []}
                 ],
                 selectedTables: [], // 체크된 테이블을 저장할 배열
-                clickedRow: null //현재 마우스ㅗ 클릭한 행
+                clickedRow: null //현재 마우스로 클릭한 행
             };
         },
         methods: {
@@ -248,15 +239,22 @@
                             row.grade = 'D+';
                         } else if (row.total >= 60) {
                             row.grade = 'D0';
-                        } else if (row.total = 0) {
-                            row.grade = 'F';
                         } else {
                             row.grade = 'F';
                         }
                     }
 
-                    // 합계행 학점 - 학점이 1이면서 성적이 'NP'인 경우엔 학점 합계에 1을 뺌
-                    if (row.credit === 1 && row.grade === 'NP') {
+                    // 1학점 성적 계산(P/NP)
+                    if (row.credit == 1) {
+                        if (row.total >= 60) {
+                            row.grade = 'P';
+                        } else {
+                            row.grade = 'NP';
+                        }
+                    }
+
+                    // 합계행 학점 - 학점이 1이면 학점 합계에 1을 뺌
+                    if (row.credit === 1) {
                         table.total_credit -= 1;
                     }
 
