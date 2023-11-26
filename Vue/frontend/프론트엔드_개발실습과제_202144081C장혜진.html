@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>C202144081장혜진</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         h1 {
@@ -174,7 +175,12 @@
                     // 출석 및 과제 점수 유효성 검사
                     if (['attendance', 'assignment'].includes(field)) {
                         if (value < 0 || value > 20) {
-                            alert(`0~20 사이의 값을 입력해주세요.`);
+                            Swal.fire({
+                                title: '',
+                                text: '0~20 사이의 값을 입력해주세요.',
+                                icon: 'warning',
+                                confirmButtonText: '확인'
+                            });
                             // 현재 값 되돌리기
                             event.target.textContent = row[field] > 0 ? row[field] : '';
                             return;
@@ -182,7 +188,12 @@
                         // 중간 및 기말 점수 유효성 검사
                     } else if (['midterm', 'final'].includes(field)) {
                         if (value < 0 || value > 30) {
-                            alert(`0~30 사이의 값을 입력해주세요.`);
+                            Swal.fire({
+                                title: '',
+                                text: '0~30 사이의 값을 입력해주세요.',
+                                icon: 'warning',
+                                confirmButtonText: '확인'
+                            });
                             // 현재 값 되돌리기
                             event.target.textContent = row[field] > 0 ? row[field] : '';
                             return;
