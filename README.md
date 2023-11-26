@@ -6,6 +6,7 @@
 ### 개발 환경
 ```
 Vue 3.3.4
+SweetAlert2
 Python 3.10
 PyCharm 2023.1.2
 ```
