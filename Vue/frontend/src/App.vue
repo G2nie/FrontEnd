@@ -148,16 +148,12 @@ export default {
       for (const row of this.tableData) {
         row.total = row.attendance + row.assignment + row.midterm + row.final;
         row.average = (row.total / 4).toFixed(2);
-        if (row.credit === 1) {
-          row.grade = row.total >= 60 ? "Pass" : "Non Pass";
-        } else {
-          if (row.average >= 90) row.grade = "A+";
+        if (row.average >= 90) row.grade = "A+";
           else if (row.average >= 80) row.grade = "A";
           else if (row.average >= 70) row.grade = "B";
           else if (row.average >= 60) row.grade = "C";
           else if (row.average >= 50) row.grade = "D";
           else row.grade = "F";
-        }
       }
     }
   }

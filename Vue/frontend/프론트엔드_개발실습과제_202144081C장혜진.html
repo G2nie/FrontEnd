@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>C202144081장혜진</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         h1 {
             text-align: center;
@@ -55,7 +54,11 @@
             font-size: 20px;
         }
 
+        .swal2-popup {
+            font-size: 10px !important;
+        }
     </style>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
 <h1>Front-end 과제</h1>
@@ -129,12 +132,18 @@
                     <td>{{ tables[table].total_final > 0 ? tables[table].total_final : ''}}</td>
                     <td>{{ tables[table].total_total > 0 ? tables[table].total_total : ''}}</td>
                     <td>{{ tables[table].total_average > 0 ? tables[table].total_average : ''}}</td>
-                    <td></td>
+                    <td>{{ tables[table].total_grade }}</td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </ul>
+    <p> [변경된 내역] 5초 후에 사라집니다. </p>
+    <div v-for="(change, index) in changes" :key="index">
+        <p v-if="change.type === 'add'">[{{ change.table }} 테이블] 새로운 행 추가 </p>
+        <p v-else-if="change.type === 'delete'">[{{ change.table }} 테이블] 삭제 된 행 : {{ change.row.name }}</p>
+        <p v-else-if="change.type === 'calculate'">[{{ change.table }} 테이블] 총학점: {{ change.oldTotalCredit }} -> {{ change.newTotalCredit }}, 평균: {{ change.oldTotalAverage }} -> {{ change.newTotalAverage }}</p>
+    </div>
     <script>
         const app = Vue.createApp({
             // 각 학년 테이블
@@ -163,7 +172,12 @@
                         for (const table of this.tables) {
                             for (const otherRow of table.rows) {
                                 if (otherRow !== row && otherRow.name === value) {
-                                    alert(`이미 존재하는 과목입니다.`);
+                                    Swal.fire({
+                                        title: '',
+                                        text: '이미 존재하는 과목입니다.',
+                                        icon: 'warning',
+                                        confirmButtonText: '확인'
+                                    });
                                     // 현재 값 되돌리기
                                     event.target.textContent = row[field];
                                     return;
@@ -227,6 +241,28 @@
                         grade: ''
                     });
 
+                    //변경된 내역
+                    const newRow = {
+                        subject: '교양',
+                        required: '필수',
+                        name: '',
+                        credit: 0,
+                        attendance: 0,
+                        assignment: 0,
+                        midterm: 0,
+                        final: 0,
+                        total: 0,
+                        average: 0,
+                        grade: ''
+                    };
+
+                    const change = {
+                        type: 'add',
+                        table: this.tables[tableIndex].name,
+                        row: newRow
+                    };
+                    this.addChange(change);
+
                     // 행 추가시 합계 행 재계산
                     this.calculate(tableIndex);
                 },
@@ -238,8 +274,16 @@
 
                 deleteRow(tableIndex) {
                     if (this.clickedRow && this.clickedRow.tableIndex === tableIndex) {
+                        const deletedRow = this.tables[tableIndex].rows.splice(this.clickedRow.rowIndex, 1)[0];
                         this.tables[tableIndex].rows.splice(this.clickedRow.rowIndex, 1);
                         this.clickedRow = null;
+
+                        const change = {
+                            type: 'delete',
+                            table: this.tables[tableIndex].name,
+                            row: deletedRow
+                        };
+                        this.addChange(change);
 
                         // 행 삭제시 합계 행 재계산
                         this.calculate(tableIndex);
@@ -249,6 +293,9 @@
                 // 저장(=계산)
                 calculate(tableIndex) {
                     const table = this.tables[tableIndex];
+                    const oldTotalCredit = table.total_credit;
+                    const oldTotalAverage = table.total_average;
+
                     // 합계 행 변수 초기화
                     table.total_credit = 0;
                     table.total_attendance = 0;
@@ -257,9 +304,17 @@
                     table.total_final = 0;
                     table.total_total = 0;
                     table.total_average = 0;
+                    table.total_grade = '';
+
+                    // 평균 계산에 사용할 과목 수
+                    let subjectCount = 0;
 
                     // 각 행을 반복하며 총점, 평균, 성적을 계산
                     for (const row of table.rows) {
+                        // 1학점은 계산에서 제외
+                        if (row.credit !== 1) {
+                            subjectCount++;
+                        }
                         // 각 열의 점수 변수
                         // 유효하지 않은 값(예: 빈 문자열)이 있을 경우 0으로 처리
                         const attendance = parseFloat(row.attendance) || 0;
@@ -273,8 +328,7 @@
                         table.total_assignment += parseFloat(row.assignment) || 0;
                         table.total_midterm += parseFloat(row.midterm) || 0;
                         table.total_final += parseFloat(row.final) || 0;
-                        table.total_total += parseFloat(row.total) || 0;
-                        table.total_average += parseFloat(row.average) || 0;
+
 
                         // 과목별 총점 계산
                         row.total = attendance + assignment + midterm + final;
@@ -315,10 +369,47 @@
                         //  1학점은 계산에 포함하지 않음
                         if (row.credit === 1) {
                             table.total_credit -= 1;
+                            table.total_attendance -= attendance;
+                            table.total_assignment -= assignment;
+                            table.total_midterm -= midterm;
+                            table.total_final -= final;
                         }
 
                         // 합계 행의 총 평균
-                        table.total_average = table.total_total / table.rows.length;
+                        table.total_average = table.total_total / subjectCount;
+
+                        // 합계 행의 총 성적
+                        if (table.total_average >= 95) {
+                            table.total_grade = 'A+';
+                        } else if (table.total_average >= 90) {
+                            table.total_grade = 'A0';
+                        } else if (table.total_average >= 85) {
+                            table.total_grade = 'B+';
+                        } else if (table.total_average >= 80) {
+                            table.total_grade = 'B0';
+                        } else if (table.total_average >= 75) {
+                            table.total_grade = 'C+';
+                        } else if (table.total_average >= 70) {
+                            table.total_grade = 'C0';
+                        } else if (table.total_average >= 65) {
+                            table.total_grade = 'D+';
+                        } else if (table.total_average >= 60) {
+                            table.total_grade = 'D0';
+                        } else {
+                            table.total_grade = 'F';
+                        }
+                    }
+
+                    if (table.total_credit !== oldTotalCredit || table.total_average !== oldTotalAverage) {
+                        const change = {
+                            type: 'calculate',
+                            table: table.name,
+                            oldTotalCredit,
+                            newTotalCredit: table.total_credit,
+                            oldTotalAverage,
+                            newTotalAverage: table.total_average
+                        };
+                        this.addChange(change);
                     }
 
                     // 이수, 필수, 과목명 순으로 테이블 오름차순 정렬
@@ -333,7 +424,18 @@
                             return a.subject.localeCompare(b.subject);
                         }
                     });
-                } // calculate()
+
+                }, // calculate()
+                 addChange(change) {
+                    this.changes.push(change);
+
+                    setTimeout(() => {
+                        const index = this.changes.indexOf(change);
+                        if (index > -1) {
+                            this.changes.splice(index, 1);
+                        }
+                    }, 5000);  // 5초 후 실행
+                },
             },
         });
         app.mount('#app');
